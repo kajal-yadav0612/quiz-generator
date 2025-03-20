@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { authAPI } from "../utils/apiUtils";
-import { Button } from "./Button";
 import { useRouter } from "next/navigation";
+import { authAPI, quizAPI } from "../utils/apiUtils";
+import { Button } from "./Button";
 
 interface QuizHistoryItem {
   quizId: string;
-  topic: string;
+  subject: string;
+  topic?: string;
   score: number;
   totalQuestions: number;
   date: string;
@@ -17,43 +18,82 @@ interface QuizHistoryItem {
 export const ReportCard = () => {
   const [quizHistory, setQuizHistory] = useState<QuizHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [topicsBySubject, setTopicsBySubject] = useState<Record<string, string[]>>({});
   const router = useRouter();
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Fetch topics for a subject
+  const fetchTopicsForSubject = async (subject: string) => {
+    try {
+      if (!subject || topicsBySubject[subject]) return;
+      
+      const topics = await quizAPI.getTopicsBySubject(subject);
+      setTopicsBySubject(prev => ({
+        ...prev,
+        [subject]: topics
+      }));
+    } catch (error) {
+      console.error(`Error fetching topics for ${subject}:`, error);
+    }
+  };
+
+  // Get topic name by ID/index
+  const getTopicName = (subject: string, topicId: string) => {
+    // If we have topics for this subject and the topicId is a number (index)
+    if (topicsBySubject[subject] && !isNaN(Number(topicId))) {
+      const index = Number(topicId);
+      return topicsBySubject[subject][index] || topicId;
+    }
+    return topicId;
+  };
 
   useEffect(() => {
     const fetchQuizHistory = async () => {
       try {
         setLoading(true);
-        const userData = await authAPI.getProfile();
+        const token = localStorage.getItem("token");
         
-        if (userData && userData.quizHistory) {
-          // Sort by date (newest first)
-          const sortedHistory = [...userData.quizHistory].sort(
-            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-          );
-          setQuizHistory(sortedHistory);
+        if (!token) {
+          router.push("/login");
+          return;
         }
-      } catch (err: any) {
-        console.error("Failed to fetch quiz history:", err);
-        setError("Failed to load your quiz history. Please try again later.");
+        
+        const profile = await authAPI.getProfile();
+        
+        if (profile.quizHistory) {
+          // Sort quiz history by date (newest first)
+          const sortedHistory = [...profile.quizHistory].sort((a, b) => 
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+          );
+          
+          setQuizHistory(sortedHistory);
+          
+          // Fetch topics for all unique subjects
+          const uniqueSubjects = Array.from(new Set(sortedHistory.map(quiz => quiz.subject || quiz.topic)));
+          uniqueSubjects.forEach(subject => {
+            if (subject) fetchTopicsForSubject(subject);
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching quiz history:", error);
+        setError("Failed to load quiz history. Please try again later.");
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchQuizHistory();
-  }, []);
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  }, [router]);
 
   const calculateAverageScore = () => {
     if (quizHistory.length === 0) return 0;
@@ -133,6 +173,9 @@ export const ReportCard = () => {
                     Date
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Subject
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Topic
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -150,7 +193,16 @@ export const ReportCard = () => {
                       {formatDate(quiz.date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{quiz.topic}</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {quiz.subject || quiz.topic || '-'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {quiz.subject && quiz.topic ? 
+                          (isNaN(Number(quiz.topic)) ? quiz.topic : getTopicName(quiz.subject, quiz.topic)) 
+                          : '-'}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{quiz.score} / {quiz.totalQuestions}</div>

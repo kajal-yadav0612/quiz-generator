@@ -234,4 +234,32 @@ const getLeaderboard = async (req, res) => {
   }
 };
 
-module.exports = { generateQuiz, saveTestScore, getUserTestScores, getLeaderboard };
+// Get topics by subject
+const getTopicsBySubject = async (req, res) => {
+  try {
+    const { subject } = req.params;
+    
+    if (!subject) {
+      return res.status(400).json({ error: "Subject is required" });
+    }
+    
+    // Define the topics by subject mapping
+    const topicsBySubject = {
+      "Mathematics": ["Algebra", "Geometry", "Calculus", "Statistics", "Trigonometry", "Number Theory"],
+      "Science": ["Physics", "Chemistry", "Biology", "Astronomy", "Earth Science", "Environmental Science"],
+      "Social Studies": ["History", "Geography", "Civics", "Economics", "Political Science", "Sociology"],
+      "General Knowledge": ["Current Affairs", "Geography", "Arts & Literature", "Sports", "Technology", "Entertainment"],
+      "Machine Learning": ["Supervised Learning", "Unsupervised Learning", "Deep Learning", "Neural Networks", "Natural Language Processing", "Computer Vision"],
+    };
+    
+    // Get topics for the requested subject
+    const topics = topicsBySubject[subject] || [];
+    
+    res.json({ topics });
+  } catch (error) {
+    console.error("Error fetching topics:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+module.exports = { generateQuiz, saveTestScore, getUserTestScores, getLeaderboard, getTopicsBySubject };

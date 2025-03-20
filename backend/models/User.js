@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema({
   },
   quizHistory: [{
     quizId: String,
+    subject: String,
     topic: String,
     score: Number,
     totalQuestions: Number,

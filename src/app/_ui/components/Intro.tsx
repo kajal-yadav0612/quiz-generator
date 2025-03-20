@@ -4,6 +4,7 @@ import { importantToKnow } from "@/ui/content/content";
 import { Button } from "./Button";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface IntroProps {
   onGetStartedClick: () => void;
@@ -48,9 +49,24 @@ export const Intro = ({ onGetStartedClick, onTestCodeSubmit }: IntroProps) => {
           Daily Practice Paper (DPP)
         </h1>
 
-        {/* Test Code Input Section */}
-        <div className="w-full mt-8 p-4 bg-white rounded-lg shadow-md">
-          <h3 className="text-black font-bold text-xl mb-3">
+        <h3 className="text-gray-800 font-bold text-xl mt-6 sm:text-2xl self-center">
+          Things to know before you start:
+        </h3>
+
+        <div className="flex flex-col items-start mt-5 sm:mt-10 space-y-5 w-full">
+          {importantToKnow.map((item, index) => (
+            <div key={index} className="flex items-center space-x-2">
+              <CheckCircle />
+              <p className="text-sm text-brand-storm-dust font-normal sm:text-xl">
+                {item}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Test Code Input Section - Moved below "Things to know" section */}
+        <div className="w-full max-w-md mx-auto mt-8 p-4 bg-white rounded-lg shadow-md">
+          <h3 className="text-black font-bold text-xl mb-3 text-center">
             Enter Test Code
           </h3>
           <div className="flex flex-col space-y-2">
@@ -63,40 +79,21 @@ export const Intro = ({ onGetStartedClick, onTestCodeSubmit }: IntroProps) => {
             />
             {error && <p className="text-red-500 text-sm">{error}</p>}
           </div>
-          <p className="text-center text-gray-500 mt-2 text-sm">- OR -</p>
-          <div className="flex w-full mt-4 p-2 bg-white rounded-lg shadow-md space-x-2">
+          <div className="flex flex-col w-full mt-4 space-y-3">
             <Button
-              className="flex-1"
               block
               size={"small"}
               onClick={handleTestCodeSubmit}
             >
               Start Test
             </Button>
-            <Button
-              className="flex-1"
-              block
-              size={"small"}
+            <a 
+              className="text-center text-blue-500 hover:text-blue-700 cursor-pointer"
               onClick={onGetStartedClick}
             >
               Attempt Quiz Without Code
-            </Button>
+            </a>
           </div>
-        </div>
-
-        <h3 className="text-black font-bold text-2xl mt-6 sm:text-3xl">
-          Things to know before you start:
-        </h3>
-
-        <div className="flex flex-col items-start mt-5 sm:mt-10 space-y-5">
-          {importantToKnow.map((item, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <CheckCircle />
-              <p className="text-sm text-brand-storm-dust font-normal sm:text-xl">
-                {item}
-              </p>
-            </div>
-          ))}
         </div>
       </div>
     </div>

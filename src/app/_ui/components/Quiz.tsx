@@ -91,8 +91,14 @@ export const Quiz = ({
           },
         }
       );
-      if (response.data && response.data.questions) {
+      
+      // Handle different response formats based on whether a test code was used
+      if (testCode && response.data && response.data.questions) {
+        // When using test code, questions are in response.data.questions
         setQuizQuestions(response.data.questions);
+      } else if (response.data) {
+        // When not using test code, questions are directly in response.data
+        setQuizQuestions(response.data);
       } else {
         setError("Failed to load questions. Please try again.");
       }
@@ -150,7 +156,8 @@ export const Quiz = ({
       const saveResult = async () => {
         try {
           await authAPI.saveQuizResult({
-            topic: selectedSubject,
+            subject: selectedSubject,
+            topic: selectedTopic,
             score: results.correctAnswers,
             totalQuestions: quizQuestions.length,
           });

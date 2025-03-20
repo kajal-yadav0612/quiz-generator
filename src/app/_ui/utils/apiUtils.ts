@@ -98,7 +98,7 @@ export const authAPI = {
    * @param {Object} resultData - Quiz result data
    * @returns {Promise<any>} - Saved result response
    */
-  saveQuizResult: async (resultData: { topic: string; score: number; totalQuestions: number }) => {
+  saveQuizResult: async (resultData: { subject: string; topic?: string; score: number; totalQuestions: number }) => {
     return apiRequest('/auth/quiz-result', 'post', resultData);
   }
 };
@@ -112,6 +112,16 @@ export const quizAPI = {
    */
   generateQuiz: async (quizParams: { topic: string; difficulty?: string; questionCount?: number }) => {
     return apiRequest('/quiz/generate', 'post', quizParams);
+  },
+  
+  /**
+   * Get topics by subject
+   * @param {string} subject - Subject to get topics for
+   * @returns {Promise<string[]>} - List of topics for the subject
+   */
+  getTopicsBySubject: async (subject: string): Promise<string[]> => {
+    const response = await apiRequest(`/quiz/topics/${encodeURIComponent(subject)}`, 'get');
+    return response.topics || [];
   }
 };
 

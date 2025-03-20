@@ -220,11 +220,11 @@ exports.updateProfile = async (req, res) => {
 // Save quiz result to user history
 exports.saveQuizResult = async (req, res) => {
   try {
-    const { topic, score, totalQuestions } = req.body;
+    const { subject, topic, score, totalQuestions } = req.body;
     
     // Validate required fields
-    if (!topic || score === undefined || !totalQuestions) {
-      return res.status(400).json({ error: "Topic, score, and totalQuestions are required" });
+    if (!subject || score === undefined || !totalQuestions) {
+      return res.status(400).json({ error: "Subject, score, and totalQuestions are required" });
     }
     
     // Find user
@@ -240,7 +240,8 @@ exports.saveQuizResult = async (req, res) => {
     // This helps prevent duplicate entries from frontend double-submissions
     const recentTime = new Date(Date.now() - 60 * 1000); // 1 minute ago
     const recentDuplicate = user.quizHistory.find(item => 
-      item.topic === topic && 
+      item.subject === subject && 
+      item.topic === (topic || '') && 
       item.score === score && 
       item.totalQuestions === totalQuestions &&
       new Date(item.date) > recentTime
@@ -258,7 +259,8 @@ exports.saveQuizResult = async (req, res) => {
     // Add quiz result to user history
     user.quizHistory.push({
       quizId,
-      topic,
+      subject,
+      topic: topic || '',
       score,
       totalQuestions,
       date: new Date()
