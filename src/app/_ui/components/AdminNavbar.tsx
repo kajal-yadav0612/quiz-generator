@@ -29,6 +29,11 @@ export const AdminNavbar = () => {
     router.push("/admin/login");
   };
 
+  // Only render the navbar if admin is logged in
+  if (!isLoggedIn) {
+    return null;
+  }
+
   return (
     <nav className="bg-brand-light-blue text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
@@ -37,24 +42,13 @@ export const AdminNavbar = () => {
         </Link>
         
         <div className="flex items-center space-x-4">
-          {isLoggedIn ? (
-            <>
-              <span>Welcome, {adminName}</span>
-              <button
-                onClick={handleLogout}
-                className="bg-white text-brand-light-blue px-3 py-1 rounded-md text-sm hover:bg-gray-100 transition-colors"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <Link
-              href="/admin/login"
-              className="bg-white text-brand-cerulean-blue px-3 py-1 rounded-md text-sm"
-            >
-              Login
-            </Link>
-          )}
+          <span>Welcome, {adminName}</span>
+          <button
+            onClick={handleLogout}
+            className="bg-white text-brand-light-blue px-3 py-1 rounded-md text-sm hover:bg-gray-100 transition-colors"
+          >
+            Logout
+          </button>
         </div>
       </div>
     </nav>

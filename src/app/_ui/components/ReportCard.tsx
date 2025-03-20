@@ -12,6 +12,9 @@ interface QuizHistoryItem {
   topic?: string;
   score: number;
   totalQuestions: number;
+  testCode?: string;
+  rank?: number;
+  totalParticipants?: number;
   date: string;
 }
 
@@ -184,6 +187,9 @@ export const ReportCard = () => {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Percentage
                   </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Rank
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -217,6 +223,30 @@ export const ReportCard = () => {
                       }`}>
                         {Math.round((quiz.score / quiz.totalQuestions) * 100)}%
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {quiz.rank ? (
+                        <div className="flex items-center">
+                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
+                            quiz.rank === 1 
+                              ? 'bg-yellow-100 text-yellow-800' 
+                              : quiz.rank === 2 
+                                ? 'bg-gray-200 text-gray-800' 
+                                : quiz.rank === 3 
+                                  ? 'bg-amber-100 text-amber-800' 
+                                  : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {quiz.rank}
+                          </span>
+                          {quiz.totalParticipants && (
+                            <span className="ml-2 text-xs text-gray-500">
+                              of {quiz.totalParticipants}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </td>
                   </tr>
                 ))}

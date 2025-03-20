@@ -2,6 +2,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const mongoose = require("mongoose");
+const TestCode = require("../models/TestCode");
+const TestScore = require("../models/TestScore");
 
 // Register a new user
 exports.register = async (req, res) => {
@@ -220,62 +222,109 @@ exports.updateProfile = async (req, res) => {
 // Save quiz result to user history
 exports.saveQuizResult = async (req, res) => {
   try {
-    const { subject, topic, score, totalQuestions } = req.body;
+    console.log("Received quiz result:", req.body);
+    const { subject, topic, score, totalQuestions, testCode, timeTaken } = req.body;
     
     // Validate required fields
     if (!subject || score === undefined || !totalQuestions) {
+      console.error("Missing required fields:", { subject, score, totalQuestions });
       return res.status(400).json({ error: "Subject, score, and totalQuestions are required" });
     }
     
     // Find user
     const user = await User.findById(req.user.userId);
     if (!user) {
+      console.error("User not found:", req.user.userId);
       return res.status(404).json({ error: "User not found" });
     }
     
     // Generate a new quiz ID
     const quizId = new mongoose.Types.ObjectId();
+    console.log("Generated quiz ID:", quizId);
     
-    // Check if a similar quiz result was saved in the last minute
-    // This helps prevent duplicate entries from frontend double-submissions
-    const recentTime = new Date(Date.now() - 60 * 1000); // 1 minute ago
-    const recentDuplicate = user.quizHistory.find(item => 
-      item.subject === subject && 
-      item.topic === (topic || '') && 
-      item.score === score && 
-      item.totalQuestions === totalQuestions &&
-      new Date(item.date) > recentTime
-    );
-    
-    if (recentDuplicate) {
-      console.log("Prevented duplicate quiz result submission");
-      // Return success with existing history
-      return res.json({
-        message: "Quiz result already saved",
-        quizHistory: user.quizHistory
-      });
-    }
-    
-    // Add quiz result to user history
-    user.quizHistory.push({
+    // Prepare quiz result data
+    const quizResult = {
       quizId,
       subject,
       topic: topic || '',
       score,
       totalQuestions,
       date: new Date()
-    });
-    
-    // Save updated user
+    };
+
+    // If test code is provided, add it to the quiz result
+    if (testCode) {
+      console.log("Processing test code:", testCode);
+      quizResult.testCode = testCode;
+      
+      // Find test code in database to verify it exists
+      const testCodeDoc = await TestCode.findOne({ testCode });
+      console.log("Found test code document:", testCodeDoc);
+      
+      if (testCodeDoc) {
+        try {
+          // Use provided timeTaken or default to 300 seconds (5 minutes)
+          const quizTimeTaken = timeTaken || 300;
+          
+          // Save to TestScore collection for admin leaderboard
+          const testScoreData = {
+            testCode,
+            userId: user._id,
+            score,
+            totalQuestions,
+            timeTaken: quizTimeTaken
+          };
+          console.log("Creating test score with data:", testScoreData);
+
+          // Try to find existing score
+          let testScore = await TestScore.findOne({
+            testCode,
+            userId: user._id
+          });
+          console.log("Existing test score:", testScore);
+
+          if (testScore) {
+            // Update only if new score is better or same score with better time
+            if (score > testScore.score || 
+                (score === testScore.score && quizTimeTaken < testScore.timeTaken)) {
+              testScore.score = score;
+              testScore.totalQuestions = totalQuestions;
+              testScore.timeTaken = quizTimeTaken;
+              await testScore.save();
+              console.log("Updated existing test score:", testScore);
+            } else {
+              console.log("Not updating test score as current score/time is not better");
+            }
+          } else {
+            // Create new test score
+            testScore = new TestScore(testScoreData);
+            await testScore.save();
+            console.log("Created new test score:", testScore);
+          }
+
+          // Add test score info to quiz result
+          quizResult.timeTaken = quizTimeTaken;
+          quizResult.testCode = testCode;
+        } catch (error) {
+          console.error("Error saving test score:", error);
+          // Don't throw error, still save to user history
+        }
+      } else {
+        console.warn("Test code not found in database:", testCode);
+      }
+    }
+
+    // Add quiz result to user's history
+    user.quizHistory.unshift(quizResult);
     await user.save();
-    
-    // Return success
+    console.log("Saved quiz result to user history");
+
     res.json({
       message: "Quiz result saved successfully",
       quizHistory: user.quizHistory
     });
   } catch (error) {
     console.error("Save quiz result error:", error);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Server error while saving quiz result" });
   }
 };

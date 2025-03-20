@@ -146,27 +146,64 @@ const getTestCodes = async (req, res) => {
 const getLeaderboard = async (req, res) => {
   try {
     const { testCode } = req.params;
+    console.log("Fetching leaderboard for test code:", testCode);
 
     // Verify the test code exists
     const testCodeDoc = await TestCode.findOne({ testCode });
     if (!testCodeDoc) {
+      console.error("Test code not found:", testCode);
       return res.status(404).json({ error: "Test code not found" });
     }
+    console.log("Found test code document:", testCodeDoc);
 
     // Get all scores for this test code, sorted by score (desc) and time taken (asc)
     const scores = await TestScore.find({ testCode })
       .sort({ score: -1, timeTaken: 1 })
       .populate("userId", "username email");
+    
+    console.log("Found test scores:", scores);
 
-    res.json({
+    // Calculate ranks
+    let currentRank = 1;
+    let prevScore = -1;
+    let prevTime = -1;
+
+    const rankedScores = scores.map((score, index) => {
+      const scorePercent = score.score / score.totalQuestions;
+      
+      // Update rank if either:
+      // 1. This is the first score
+      // 2. Current score percent is different from previous
+      // 3. Same score percent but current time taken is more than previous
+      if (index === 0 || 
+          scorePercent !== prevScore || 
+          (scorePercent === prevScore && score.timeTaken > prevTime)) {
+        currentRank = index + 1;
+      }
+
+      prevScore = scorePercent;
+      prevTime = score.timeTaken;
+
+      const rankedScore = {
+        ...score.toObject(),
+        rank: currentRank
+      };
+      console.log("Processed score:", rankedScore);
+      return rankedScore;
+    });
+
+    const response = {
       testInfo: {
         testCode: testCodeDoc.testCode,
         subject: testCodeDoc.subject,
         topic: testCodeDoc.topic,
         difficulty: testCodeDoc.difficulty
       },
-      leaderboard: scores
-    });
+      leaderboard: rankedScores
+    };
+    console.log("Sending leaderboard response:", response);
+
+    res.json(response);
   } catch (error) {
     console.error("Get leaderboard error:", error);
     res.status(500).json({ error: "Server error while fetching leaderboard" });

@@ -155,15 +155,29 @@ export const Quiz = ({
       // Save the quiz result before showing the result screen
       const saveResult = async () => {
         try {
+          // Calculate total time taken in seconds
+          const totalTimeTaken = results.secondsUsed + timePassed;
+          
+          console.log("Submitting quiz result:", {
+            subject: selectedSubject,
+            topic: selectedTopic,
+            score: results.correctAnswers,
+            totalQuestions: quizQuestions.length,
+            testCode,
+            timeTaken: totalTimeTaken,
+          });
+          
           await authAPI.saveQuizResult({
             subject: selectedSubject,
             topic: selectedTopic,
             score: results.correctAnswers,
             totalQuestions: quizQuestions.length,
+            testCode: testCode || undefined,  // Include test code if available
+            timeTaken: totalTimeTaken,  // Include time taken in seconds
           });
           console.log("Quiz result saved successfully");
-        } catch (error) {
-          console.error("Failed to save quiz result:", error);
+        } catch (error: any) {
+          console.error("Failed to save quiz result:", error.response?.data || error);
         } finally {
           setQuizFinished(true);
         }

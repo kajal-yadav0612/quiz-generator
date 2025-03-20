@@ -219,6 +219,29 @@ const getLeaderboard = async (req, res) => {
       .sort({ score: -1, timeTaken: 1 })
       .populate("userId", "username email");
 
+    // Calculate ranks
+    let currentRank = 1;
+    let prevScore = -1;
+    let prevTime = -1;
+    
+    const scoresWithRanks = scores.map((score, index) => {
+      // If this is the first score or if the score/time is different from the previous one
+      if (index === 0 || 
+          score.score !== prevScore || 
+          score.timeTaken !== prevTime) {
+        currentRank = index + 1;
+      }
+      
+      prevScore = score.score;
+      prevTime = score.timeTaken;
+      
+      // Create a new object with all properties from the score document plus rank
+      const scoreObj = score.toObject();
+      scoreObj.rank = currentRank;
+      
+      return scoreObj;
+    });
+
     res.json({
       testInfo: {
         testCode: testCodeDoc.testCode,
@@ -226,7 +249,7 @@ const getLeaderboard = async (req, res) => {
         topic: testCodeDoc.topic,
         difficulty: testCodeDoc.difficulty
       },
-      leaderboard: scores
+      scores: scoresWithRanks
     });
   } catch (error) {
     console.error("Get leaderboard error:", error);

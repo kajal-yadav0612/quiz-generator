@@ -33,6 +33,15 @@ const userSchema = new mongoose.Schema({
     topic: String,
     score: Number,
     totalQuestions: Number,
+    testCode: String,  // To track which test code was used
+    rank: {
+      type: Number,
+      default: 0
+    },
+    totalParticipants: {
+      type: Number,
+      default: 0
+    },
     date: {
       type: Date,
       default: Date.now

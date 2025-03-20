@@ -98,7 +98,14 @@ export const authAPI = {
    * @param {Object} resultData - Quiz result data
    * @returns {Promise<any>} - Saved result response
    */
-  saveQuizResult: async (resultData: { subject: string; topic?: string; score: number; totalQuestions: number }) => {
+  saveQuizResult: async (resultData: { 
+    subject: string; 
+    topic?: string; 
+    score: number; 
+    totalQuestions: number;
+    testCode?: string;
+    timeTaken?: number;
+  }) => {
     return apiRequest('/auth/quiz-result', 'post', resultData);
   }
 };
@@ -122,6 +129,15 @@ export const quizAPI = {
   getTopicsBySubject: async (subject: string): Promise<string[]> => {
     const response = await apiRequest(`/quiz/topics/${encodeURIComponent(subject)}`, 'get');
     return response.topics || [];
+  },
+  
+  /**
+   * Get leaderboard for a specific test code
+   * @param {string} testCode - Test code to get leaderboard for
+   * @returns {Promise<any>} - Leaderboard data
+   */
+  getLeaderboard: async (testCode: string) => {
+    return apiRequest(`/quiz/leaderboard/${encodeURIComponent(testCode)}`, 'get');
   }
 };
 
