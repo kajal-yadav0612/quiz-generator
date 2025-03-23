@@ -28,6 +28,7 @@ export default function AdminLogin() {
         localStorage.setItem("adminName", response.data.admin.name);
         localStorage.setItem("adminEmail", response.data.admin.email);
         localStorage.setItem("adminRole", response.data.admin.role);
+        localStorage.setItem("isAdmin", "true");  // Set isAdmin flag for admin users
         
         // Redirect to admin dashboard
         router.push("/admin/dashboard");
@@ -41,39 +42,42 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-2 text-center">Admin Login</h1>
-        <p className="text-center text-gray-600 mb-6">Login to manage quizzes and view results</p>
+    <div className="flex items-center justify-center min-h-screen bg-black">
+      <div className="w-full max-w-md p-8">
+        <div className="flex justify-center mb-8">
+          
+            <g>
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+            </g>
+         
+        </div>
+        
+        <h1 className="text-3xl font-bold mb-6 text-white text-center">Admin Login</h1>
+        
         <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="space-y-4">
             <div>
-              <label htmlFor="email-address" className="sr-only">
-                Email address
-              </label>
               <input
                 id="email-address"
                 name="email"
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
+            
             <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
               <input
                 id="password"
                 name="password"
                 type="password"
                 autoComplete="current-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -82,28 +86,31 @@ export default function AdminLogin() {
           </div>
 
           {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
+            <div className="text-red-500 text-sm text-center mt-2">{error}</div>
           )}
 
           <div>
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-brand-light-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="w-full p-3 rounded-md bg-white text-black font-bold hover:bg-gray-200 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black"
             >
               {loading ? "Logging in..." : "Sign in"}
             </button>
           </div>
         </form>
         
-        <div className="text-center mt-4">
-          <Link href="/admin/signup" className="text-blue-600 hover:text-blue-800">
-            Don&apos;t have an admin account? Sign up
-          </Link>
+        <div className="text-center mt-6">
+          <p className="text-gray-500">
+            Don&apos;t have an admin account?{" "}
+            <Link href="/admin/signup" className="text-blue-500 hover:text-blue-400">
+              Sign up
+            </Link>
+          </p>
         </div>
         
-        <div className="text-center mt-2">
-          <Link href="/login" className="text-blue-600 hover:text-blue-800">
+        <div className="border-t border-gray-800 mt-8 pt-6 text-center">
+          <Link href="/login" className="text-blue-500 hover:text-blue-400">
             Login as Student
           </Link>
         </div>

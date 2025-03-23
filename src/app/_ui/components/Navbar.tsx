@@ -2,12 +2,21 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { getCurrentUser, logout, User } from "../utils/authUtils";
+import { Button } from "./Button";
+
+interface ExtendedUser extends User {
+  isAdmin?: boolean;
+}
 
 export const Navbar = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ExtendedUser | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
+
+  // List of paths where navbar should not appear
+  const hiddenPaths = ['/login', '/signup', '/admin/login'];
 
   useEffect(() => {
     // Get the current user when component mounts
@@ -21,49 +30,33 @@ export const Navbar = () => {
     router.push("/login");
   };
 
+  // Don't render navbar for admin, non-logged in users, or on login/signup pages
+  if (!user || user.isAdmin || hiddenPaths.includes(pathname)) {
+    return null;
+  }
+
   return (
-    <nav className="bg-blue-600 text-white p-4">
-      <div className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="text-xl font-bold">
-          Quiz App
-        </Link>
-        
+    <nav className="bg-white text-brand-bittersweet p-4 shadow-sm">
+      <div className="container mx-auto flex justify-end items-center">
         <div className="flex items-center space-x-4">
-          {user ? (
-            <>
-              <div className="flex flex-col items-end">
-                <span className="font-semibold">{user.username}</span>
-                {user.email && <span className="text-xs text-blue-200">{user.email}</span>}
-              </div>
-              <Link
-                href="/report-card"
-                className="bg-white text-blue-600 px-3 py-1 rounded text-sm hover:bg-gray-100"
-              >
-                Report Card
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="bg-white text-blue-600 px-3 py-1 rounded text-sm hover:bg-gray-100"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <div className="space-x-2">
-              <Link
-                href="/login"
-                className="bg-white text-blue-600 px-3 py-1 rounded text-sm hover:bg-gray-100"
-              >
-                Login
-              </Link>
-              <Link
-                href="/signup"
-                className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-400"
-              >
-                Sign Up
-              </Link>
-            </div>
-          )}
+          <div className="flex flex-col items-end">
+            <span className="font-semibold text-brand-bittersweet">{user.username}</span>
+            {user.email && <span className="text-xs text-gray-500">{user.email}</span>}
+          </div>
+          <Button
+            intent="primary"
+            size="small"
+            onClick={() => router.push('/report-card')}
+          >
+            Report Card
+          </Button>
+          <Button
+            intent="primary"
+            size="small"
+            onClick={handleLogout}
+          >
+            Logout
+          </Button>
         </div>
       </div>
     </nav>

@@ -12,6 +12,33 @@ const api = axios.create({
   },
 });
 
+// Add request interceptor to automatically add auth header
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor to handle auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear token and redirect to login
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 /**
  * Make an authenticated API request
  * @param {string} endpoint - API endpoint (without base URL)
@@ -25,24 +52,21 @@ export const apiRequest = async (
   data: any = null
 ): Promise<any> => {
   try {
-    // Get auth header with token
-    const authHeader = getAuthHeader();
-    
     // Make request with appropriate method
     let response;
     
     switch (method) {
       case 'get':
-        response = await api.get(endpoint, { headers: authHeader });
+        response = await api.get(endpoint);
         break;
       case 'post':
-        response = await api.post(endpoint, data, { headers: authHeader });
+        response = await api.post(endpoint, data);
         break;
       case 'put':
-        response = await api.put(endpoint, data, { headers: authHeader });
+        response = await api.put(endpoint, data);
         break;
       case 'delete':
-        response = await api.delete(endpoint, { headers: authHeader });
+        response = await api.delete(endpoint);
         break;
       default:
         throw new Error(`Unsupported method: ${method}`);

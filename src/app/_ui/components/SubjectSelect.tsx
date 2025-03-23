@@ -69,19 +69,19 @@ export const SubjectSelect = ({ onStartQuiz }: { onStartQuiz: (subject: Subject,
         initial: { opacity: 0, y: 20 },
         animate: { opacity: 1, y: 0 },
       }}
-      className="w-full h-full flex flex-col p-5 overflow-y-auto bg-brand-background rounded-2xl shadow-soft"
+      className="w-full h-full flex flex-col p-5 overflow-y-auto bg-gradient-to-br from-brand-background to-brand-background-light rounded-2xl shadow-soft"
       initial="initial"
       animate="animate"
       exit="initial"
     >
       <div className="flex-1 flex flex-col mb-6">
-        <h1 className="text-brand-primary font-bold text-3xl text-center mb-8">
+        <h1 className="text-[#E32636] font-bold text-3xl text-center mb-8">
           Customize Your Quiz
         </h1>
 
         <div className="space-y-6 max-w-md mx-auto w-full">
           {/* Subject Selection Dropdown */}
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-brand-background-dark">
+          <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-md border border-brand-background-dark/20 hover:shadow-lg transition-all duration-300">
             <label htmlFor="subject-select" className="block text-lg font-medium text-brand-neutral-dark mb-2">
               Subject
             </label>
@@ -108,7 +108,7 @@ export const SubjectSelect = ({ onStartQuiz }: { onStartQuiz: (subject: Subject,
           </div>
 
           {/* Topic Selection Dropdown */}
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-brand-background-dark">
+          <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-md border border-brand-background-dark/20 hover:shadow-lg transition-all duration-300">
             <label htmlFor="topic-select" className="block text-lg font-medium text-brand-neutral-dark mb-2">
               Topic
             </label>
@@ -138,7 +138,7 @@ export const SubjectSelect = ({ onStartQuiz }: { onStartQuiz: (subject: Subject,
           </div>
 
           {/* Difficulty Selection */}
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-brand-background-dark">
+          <div className="bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-md border border-brand-background-dark/20 hover:shadow-lg transition-all duration-300">
             <h2 className="text-lg font-medium text-brand-neutral-dark mb-3">Difficulty Level</h2>
             <div className="grid grid-cols-3 gap-3">
               {levels.map((level) => {
@@ -176,7 +176,7 @@ export const SubjectSelect = ({ onStartQuiz }: { onStartQuiz: (subject: Subject,
       </div>
 
       {/* Continue Button - Fixed at bottom */}
-      <div className="sticky bottom-0 pt-4 pb-2 bg-brand-background">
+      <div className="sticky bottom-0 pt-4 pb-2 bg-gradient-to-b from-transparent to-brand-background">
         <div className="max-w-md mx-auto w-full">
           <button
             disabled={!selectedSubject || !selectedLevel || !selectedTopic || loading}
@@ -184,7 +184,7 @@ export const SubjectSelect = ({ onStartQuiz }: { onStartQuiz: (subject: Subject,
             className={`w-full py-4 px-6 rounded-xl font-bold text-white shadow-button transition-all duration-200 ${
               !selectedSubject || !selectedLevel || !selectedTopic || loading
                 ? 'bg-brand-neutral-light cursor-not-allowed'
-                : 'bg-brand-primary hover:bg-brand-primary-dark transform hover:-translate-y-1'
+                : 'bg-[#E32636] hover:bg-[#E32636]/90 transform hover:-translate-y-1'
             }`}
           >
             {loading ? (

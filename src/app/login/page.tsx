@@ -26,6 +26,7 @@ export default function LoginPage() {
       localStorage.setItem("token", response.token);
       localStorage.setItem("username", response.username);
       localStorage.setItem("userId", response.userId);
+      localStorage.setItem("isAdmin", "false");  // Explicitly set isAdmin to false for regular users
       if (response.email) {
         localStorage.setItem("email", response.email);
       }
@@ -45,51 +46,55 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-2 text-center">Student Login</h1>
-        <p className="text-center text-gray-600 mb-6">Login to take quizzes and view your results</p>
+    <div className="flex items-center justify-center min-h-screen bg-black">
+      <div className="w-full max-w-md p-8">
+        <div className="flex justify-center mb-8">
+        
+            <g>
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+            </g>
+          
+        </div>
+        
+        <h1 className="text-3xl font-bold mb-6 text-white text-center">Student Login</h1>
         
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-900 border border-red-800 text-red-300 px-4 py-3 rounded mb-6">
             {error}
           </div>
         )}
         
-        <form onSubmit={handleLogin}>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="identifier">
-              Email or Username
-            </label>
-            <input
-              id="identifier"
-              type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              required
-              placeholder="your.email@example.com or username"
-            />
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <input
+                id="identifier"
+                type="text"
+                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                required
+                placeholder="Email or Username"
+              />
+            </div>
+            
+            <div>
+              <input
+                id="password"
+                type="password"
+                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="Password"
+              />
+            </div>
           </div>
           
-          <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
+          <div>
             <button
               type="submit"
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+              className="w-full p-3 rounded-md bg-white text-black font-bold hover:bg-gray-200 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black"
               disabled={loading}
             >
               {loading ? "Logging in..." : "Log In as Student"}
@@ -97,14 +102,17 @@ export default function LoginPage() {
           </div>
         </form>
         
-        <div className="text-center mt-4">
-          <Link href="/signup" className="text-blue-600 hover:text-blue-800">
-            Don&apos;t have an account? Sign up
-          </Link>
+        <div className="text-center mt-6">
+          <p className="text-gray-500">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="text-blue-500 hover:text-blue-400">
+              Sign up
+            </Link>
+          </p>
         </div>
         
-        <div className="text-center mt-2">
-          <Link href="/admin/login" className="text-blue-600 hover:text-blue-800">
+        <div className="border-t border-gray-800 mt-8 pt-6 text-center">
+          <Link href="/admin/login" className="text-blue-500 hover:text-blue-400">
             Login as Admin
           </Link>
         </div>

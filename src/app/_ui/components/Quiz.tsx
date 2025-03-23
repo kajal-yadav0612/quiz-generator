@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { fetchQuizQuestions } from "../utils/fetchQuestions"; // Import Gemini fetch function
-import { Button } from "@/ui/components/Button";
+import { Button } from "@/app/_ui/components/Button";
 import { OptionList } from "./OptionList";
 import { formatTime } from "../utils/formatTime";
 import { useRouter } from "next/navigation";
@@ -48,6 +48,7 @@ export const Quiz = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [timeSpent, setTimeSpent] = useState(0);
+  const [testCodeState, setTestCode] = useState(testCode);
 
   // Update the QuizQuestion interface to include id property
   interface QuizQuestion {
@@ -155,31 +156,29 @@ export const Quiz = ({
       // Save the quiz result before showing the result screen
       const saveResult = async () => {
         try {
-          // Calculate total time taken in seconds
-          const totalTimeTaken = results.secondsUsed + timePassed;
+          console.log("Saving quiz result...");
+          const finalTestCode = testCode || generateTestCode();
           
-          console.log("Submitting quiz result:", {
+          // Save quiz result only once
+          const response = await authAPI.saveQuizResult({
             subject: selectedSubject,
             topic: selectedTopic,
             score: results.correctAnswers,
             totalQuestions: quizQuestions.length,
-            testCode,
-            timeTaken: totalTimeTaken,
+            testCode: finalTestCode,
+            timeTaken: results.secondsUsed + timePassed,
           });
           
-          await authAPI.saveQuizResult({
-            subject: selectedSubject,
-            topic: selectedTopic,
-            score: results.correctAnswers,
-            totalQuestions: quizQuestions.length,
-            testCode: testCode || undefined,  // Include test code if available
-            timeTaken: totalTimeTaken,  // Include time taken in seconds
-          });
           console.log("Quiz result saved successfully");
+          
+          // Set the test code for the Result component
+          setTestCode(finalTestCode);
+          
+          // Show the result
+          setQuizFinished(true);
         } catch (error: any) {
           console.error("Failed to save quiz result:", error.response?.data || error);
-        } finally {
-          setQuizFinished(true);
+          setError("Failed to save your quiz result. Please try again later.");
         }
       };
       saveResult();
@@ -233,7 +232,7 @@ export const Quiz = ({
       await axios.post(
         "http://localhost:5000/api/quiz/save-score",
         {
-          testCode,
+          testCode: testCodeState,
           score,
           totalQuestions: quizQuestions.length,
           timeTaken: timeSpent,
@@ -247,6 +246,12 @@ export const Quiz = ({
     } catch (error) {
       console.error("Error saving test score:", error);
     }
+  };
+
+  const generateTestCode = () => {
+    // Implement test code generation logic here
+    // For now, return a random string
+    return Math.random().toString(36).substr(2, 9);
   };
 
   if (loading) {
@@ -274,9 +279,15 @@ export const Quiz = ({
   if (quizFinished) {
     return (
       <Result
-        results={results}
+        results={{
+          correctAnswers: results.correctAnswers,
+          wrongAnswers: results.wrongAnswers,
+          secondsUsed: results.secondsUsed,
+        }}
         totalQuestions={quizQuestions.length}
-        topic={selectedSubject}
+        topic={selectedTopic}
+        subject={selectedSubject}
+        testCode={testCodeState} // Pass the test code to Result component
       />
     );
   }

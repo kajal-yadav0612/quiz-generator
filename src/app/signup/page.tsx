@@ -70,107 +70,105 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-2 text-center">Student Registration</h1>
-        <p className="text-center text-gray-600 mb-6">Create a student account to take quizzes</p>
+    <div className="flex items-center justify-center min-h-screen bg-black">
+      <div className="w-full max-w-md p-8">
+        <div className="flex justify-center mb-8">
+        
+            <g>
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+            </g>
+         
+        </div>
+        
+        <h1 className="text-3xl font-bold mb-6 text-white text-center">Join today.</h1>
         
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-900 border border-red-800 text-red-300 px-4 py-3 rounded mb-6">
             {error}
           </div>
         )}
         
-        <form onSubmit={handleSignup}>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-              Email Address*
-            </label>
-            <input
-              id="email"
-              type="email"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="your.email@example.com"
-            />
+        <form onSubmit={handleSignup} className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <input
+                id="email"
+                type="email"
+                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="Email Address"
+              />
+            </div>
+            
+            <div>
+              <input
+                id="username"
+                type="text"
+                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Username (Optional)"
+              />
+            </div>
+            
+            <div>
+              <input
+                id="password"
+                type="password"
+                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                placeholder="Password"
+              />
+            </div>
+            
+            <div>
+              <input
+                id="confirmPassword"
+                type="password"
+                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                placeholder="Confirm Password"
+              />
+              <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters long</p>
+            </div>
           </div>
           
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
-              Username (Optional)
-            </label>
-            <input
-              id="username"
-              type="text"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="If left empty, we'll use part of your email"
-            />
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-              Password*
-            </label>
-            <input
-              id="password"
-              type="password"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-            <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters long</p>
-          </div>
-          
-          <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="confirmPassword">
-              Confirm Password*
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
+          <div>
             <button
               type="submit"
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+              className="w-full p-3 rounded-md bg-white text-black font-bold hover:bg-gray-200 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black"
               disabled={loading}
             >
-              {loading ? "Creating Account..." : "Sign Up as Student"}
+              {loading ? "Creating Account..." : "Create Account"}
             </button>
           </div>
         </form>
-        
-        <div className="text-center mt-4">
-          <p className="text-sm">
+          
+          <p className="text-gray-500">
             Already have an account?{" "}
-            <Link href="/login" className="text-blue-500 hover:text-blue-700">
+            <Link href="/login" className="text-blue-500 hover:text-blue-400">
               Log In
             </Link>
           </p>
         </div>
         
-        <div className="text-center mt-2">
-          <p className="text-sm">
+        <div className="border-t border-gray-800 mt-8 pt-6 text-center">
+          <p className="text-gray-500">
             Are you an administrator?{" "}
-            <Link href="/admin/signup" className="text-blue-500 hover:text-blue-700">
+            <Link href="/admin/signup" className="text-blue-500 hover:text-blue-400">
               Admin Registration
             </Link>
           </p>
         </div>
       </div>
-    </div>
+  
   );
 }

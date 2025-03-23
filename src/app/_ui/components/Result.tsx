@@ -25,72 +25,56 @@ interface ResultProps {
   };
   totalQuestions: number;
   topic: string;
+  subject: string;
+  testCode?: string;
 }
 
-export const Result = ({ results, totalQuestions, topic }: ResultProps) => {
+export const Result = ({ results, totalQuestions, topic, subject, testCode }: ResultProps) => {
   const { correctAnswers, wrongAnswers, secondsUsed } = results;
-  const [quizHistory, setQuizHistory] = useState<QuizHistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showHistory, setShowHistory] = useState(false);
   const [error, setError] = useState("");
   const [resultSaved, setResultSaved] = useState(false);
   const router = useRouter();
+  
+  // Calculate score percentage for progress bar
+  const scorePercentage = Math.round((correctAnswers / totalQuestions) * 100);
+  const timePercentage = Math.round((secondsUsed / (60 * totalQuestions)) * 100);
 
   useEffect(() => {
-    // Save the current quiz result only if not already saved
+    // Save the current quiz result
     const saveQuizResult = async () => {
-      if (resultSaved) {
-        // If already saved, just fetch the quiz history
-        try {
-          const userData = await authAPI.getProfile();
-          
-          if (userData && userData.quizHistory) {
-            // Sort by date (newest first)
-            const sortedHistory = [...userData.quizHistory].sort(
-              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-            );
-            setQuizHistory(sortedHistory);
-          }
-        } catch (err: any) {
-          console.error("Failed to fetch quiz history:", err);
-          setError("Failed to load your quiz history. Please try again later.");
-        } finally {
-          setLoading(false);
-        }
-        return;
-      }
-
       try {
-        // Save the quiz result
-        await authAPI.saveQuizResult({
-          topic,
-          score: correctAnswers,
-          totalQuestions
-        });
+        setError("");  // Clear any previous errors
         
-        // Mark as saved to prevent duplicate saves
-        setResultSaved(true);
-        
-        // After saving, fetch the updated quiz history
-        const userData = await authAPI.getProfile();
-        
-        if (userData && userData.quizHistory) {
-          // Sort by date (newest first)
-          const sortedHistory = [...userData.quizHistory].sort(
-            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-          );
-          setQuizHistory(sortedHistory);
+        if (!resultSaved) {
+          // Generate a test code if not provided
+          const quizTestCode = testCode || Math.random().toString(36).substr(2, 9);
+          
+          console.log("Saving quiz result with test code:", quizTestCode);
+          const response = await authAPI.saveQuizResult({
+            subject,
+            topic,
+            score: correctAnswers,
+            totalQuestions,
+            timeTaken: secondsUsed,
+            testCode: quizTestCode
+          });
+          
+          console.log("Quiz result saved successfully:", response);
+          setResultSaved(true);
         }
       } catch (err: any) {
-        console.error("Failed to save quiz result or fetch history:", err);
-        setError("Failed to save your quiz result. Please try again later.");
-      } finally {
-        setLoading(false);
+        console.error("Error in quiz result handling:", err);
+        console.error("Error details:", {
+          message: err.message,
+          response: err.response?.data,
+          status: err.response?.status
+        });
+        setError(err.response?.data?.error || "Failed to handle quiz result. Please try again later.");
       }
     };
 
     saveQuizResult();
-  }, [correctAnswers, totalQuestions, topic, resultSaved]);
+  }, []); // Only run once when component mounts
 
   const handleRetry = () => {
     // Restart quiz
@@ -113,13 +97,15 @@ export const Result = ({ results, totalQuestions, topic }: ResultProps) => {
   };
 
   const calculateAverageScore = () => {
-    if (quizHistory.length === 0) return 0;
-    
-    const totalScore = quizHistory.reduce((acc, quiz) => {
-      return acc + (quiz.score / quiz.totalQuestions) * 100;
-    }, 0);
-    
-    return Math.round(totalScore / quizHistory.length);
+    return 0;
+  };
+
+  // Get feedback based on score
+  const getFeedback = () => {
+    if (scorePercentage >= 80) return "Excellent work!";
+    if (scorePercentage >= 60) return "Good job!";
+    if (scorePercentage >= 40) return "Keep practicing!";
+    return "Don't give up!";
   };
 
   return (
@@ -127,11 +113,11 @@ export const Result = ({ results, totalQuestions, topic }: ResultProps) => {
       key={"result"}
       variants={{
         initial: {
-          background: "#FF6A66",
+          background: "linear-gradient(135deg, #FF6A66 0%, #FF9A8B 100%)",
           clipPath: "circle(0% at 50% 50%)",
         },
         animate: {
-          background: "#FF6A66",
+          background: "linear-gradient(135deg, #FF6A66 0%, #FF9A8B 100%)",
           clipPath: "circle(100% at 50% 50%)",
         },
       }}
@@ -141,190 +127,129 @@ export const Result = ({ results, totalQuestions, topic }: ResultProps) => {
       exit="exit"
       transition={{ duration: 0.5 }}
     >
-      <div className="flex flex-col text-black font-bold text-[32px] text-center w-full">
-        <h1 className="font-bold text-base text-white">Daily Practice Paper Test Results</h1>
+      <div className="flex flex-col text-black font-bold text-center w-full max-w-2xl mx-auto">
+        <div className="bg-white/20 backdrop-blur-sm py-3 px-4 rounded-xl">
+          <h1 className="font-bold text-xl text-white">Daily Practice Paper Test Results</h1>
+        </div>
 
         {/* Current Result Box */}
-        <div className="mt-6 flex-1 bg-white border border-brand-light-gray rounded-2xl flex flex-col items-center py-7 px-2 ">
-          <Lottie
-            animationData={confettiAnimation}
-            loop={false}
-            autoplay={true}
-            style={{ width: "170px", height: "170px" }}
-          />
-          <h3 className="text-brand-midnight text-[32px] font-medium leading-9 mt-4">
-            Congratulations!
+        <div className="mt-6 flex-1 bg-white border border-brand-light-gray rounded-2xl shadow-lg flex flex-col items-center py-7 px-4">
+          <div className="relative">
+            <Lottie
+              animationData={confettiAnimation}
+              loop={false}
+              autoplay={true}
+              style={{ width: "170px", height: "170px" }}
+            />
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
+              {topic}
+            </div>
+          </div>
+          
+          <h3 className="text-brand-midnight text-3xl font-bold mt-4">
+            {getFeedback()}
           </h3>
-          <p className="text-brand-midnight text-xl font-normal mt-2">
-            You scored
-          </p>
-          <span className="text-brand-midnight font-medium text-[40px]">
-            {`${correctAnswers}/${totalQuestions}`}
-          </span>
-          <p className="text-brand-midnight text-sm font-normal mt-1">
-            correct answers
-          </p>
+          
+          {/* <div className="mt-6 w-full px-4">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-lg font-medium text-gray-700">Score</span>
+              <span className="text-lg font-medium text-gray-700">{scorePercentage}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div 
+                className={`h-3 rounded-full ${
+                  scorePercentage >= 70 ? 'bg-green-500' : 
+                  scorePercentage >= 40 ? 'bg-yellow-500' : 'bg-red-500'
+                }`} 
+                style={{ width: `${scorePercentage}%` }}
+              ></div>
+            </div>
+            <p className="text-center text-3xl font-bold text-gray-800 mt-3">{correctAnswers}/{totalQuestions}</p>
+            <p className="text-center text-sm font-normal text-gray-500">correct answers</p>
+          </div> */}
 
           {/* Charts */}
-          <div className="flex items-center mt-4 space-x-4">
-            <DonutChart
-              className="w-36 h-36"
-              total={60 * totalQuestions}
-              used={secondsUsed}
-              type={"time"}
-              data={[
-                {
-                  label: "Time Used",
-                  value: secondsUsed,
-                  color: "#374CB7",
-                },
-                {
-                  label: "Time Left",
-                  value: 60 * totalQuestions - secondsUsed,
-                  color: "#F0F0F0",
-                },
-              ]}
-            />
+          <div className="flex flex-wrap items-center justify-center mt-6 gap-6">
+            <div className="flex flex-col items-center">
+              <DonutChart
+                className="w-32 h-32"
+                total={60 * totalQuestions}
+                used={secondsUsed}
+                type={"time"}
+                data={[
+                  {
+                    label: "Time Used",
+                    value: secondsUsed,
+                    color: "#4F46E5",
+                  },
+                  {
+                    label: "Time Left",
+                    value: 60 * totalQuestions - secondsUsed,
+                    color: "#F0F0F0",
+                  },
+                ]}
+              />
+              <div className="mt-2 text-center">
+                <p className="text-sm font-semibold text-gray-700">Time Used</p>
+                <p className="text-xs text-gray-500">{timePercentage}% of available time</p>
+              </div>
+            </div>
 
-            <DonutChart
-              className="w-36 h-36"
-              type={"questions"}
-              total={totalQuestions}
-              used={correctAnswers}
-              data={[
-                {
-                  label: "Correct",
-                  value: correctAnswers,
-                  color: "#56C490",
-                },
-                {
-                  label: "Wrong",
-                  value: wrongAnswers,
-                  color: "#FF6A66",
-                },
-              ]}
-            />
+            <div className="flex flex-col items-center">
+              <DonutChart
+                className="w-32 h-32"
+                type={"questions"}
+                total={totalQuestions}
+                used={correctAnswers}
+                data={[
+                  {
+                    label: "Correct",
+                    value: correctAnswers,
+                    color: "#10B981",
+                  },
+                  {
+                    label: "Wrong",
+                    value: wrongAnswers,
+                    color: "#EF4444",
+                  },
+                ]}
+              />
+              <div className="mt-2 text-center">
+                <p className="text-sm font-semibold text-gray-700">Questions</p>
+                <p className="text-xs text-gray-500">{correctAnswers} correct, {wrongAnswers} wrong</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Toggle History Button */}
-        <Button
-          intent={"secondary"}
-          size="small"
-          block
-          className="mt-4"
-          onClick={() => setShowHistory(!showHistory)}
-        >
-          {showHistory ? "Hide Quiz History" : "Show Quiz History"}
-        </Button>
-
-        {/* View Full Report Card Button */}
-        <Button
-          intent={"secondary"}
-          size="small"
-          block
-          className="mt-4"
-          onClick={handleViewReportCard}
-        >
-          View Full Report Card
-        </Button>
-
-        {/* Quiz History Section */}
-        {showHistory && (
-          <div className="mt-4 bg-white rounded-lg shadow-md p-4 w-full">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Your Quiz History</h2>
-            
-            {loading ? (
-              <div className="flex justify-center items-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-              </div>
-            ) : error ? (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                {error}
-              </div>
-            ) : quizHistory.length === 0 ? (
-              <p className="text-gray-600 text-center py-4">No previous quiz history found.</p>
-            ) : (
-              <>
-                <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                  <div className="flex flex-wrap justify-between items-center">
-                    <div className="mb-2 md:mb-0">
-                      <h3 className="text-lg font-semibold text-gray-800">Performance Summary</h3>
-                      <p className="text-gray-600 text-sm">Based on {quizHistory.length} quiz{quizHistory.length !== 1 ? 'zes' : ''}</p>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="text-center mr-6">
-                        <p className="text-xs text-gray-600">Average Score</p>
-                        <p className="text-xl font-bold text-blue-600">{calculateAverageScore()}%</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-gray-600">Quizzes Taken</p>
-                        <p className="text-xl font-bold text-blue-600">{quizHistory.length}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Topic
-                        </th>
-                        <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Score
-                        </th>
-                        <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          %
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {quizHistory.map((quiz) => (
-                        <tr key={quiz.quizId} className="hover:bg-gray-50">
-                          <td className="px-4 py-2 whitespace-nowrap text-xs text-gray-500">
-                            {formatDate(quiz.date)}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
-                            <div className="text-xs font-medium text-gray-900">{quiz.topic}</div>
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
-                            <div className="text-xs text-gray-900">{quiz.score} / {quiz.totalQuestions}</div>
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap">
-                            <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                              (quiz.score / quiz.totalQuestions) >= 0.7 
-                                ? 'bg-green-100 text-green-800' 
-                                : (quiz.score / quiz.totalQuestions) >= 0.4 
-                                  ? 'bg-yellow-100 text-yellow-800' 
-                                  : 'bg-red-100 text-red-800'
-                            }`}>
-                              {Math.round((quiz.score / quiz.totalQuestions) * 100)}%
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Retry Button */}
-        <div className="mt-auto">
+        {/* Action Buttons Container */}
+        <div className="mt-6 grid gap-3">
+          {/* View Full Report Card Button */}
           <Button
-            intent={"secondary"}
-            size="small"
+            intent="primary"
+            size="medium"
             block
-            className="mt-6"
+            className="bg-gradient-to-r from-[#374CB7] to-[#4E61D8] hover:from-[#2a3b8e] hover:to-[#3a4ab8] text-white rounded-xl shadow-md font-medium flex items-center justify-center py-3.5"
+            onClick={handleViewReportCard}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z" />
+              <path d="M3 8a2 2 0 012-2h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+            </svg>
+            View Full Report Card
+          </Button>
+
+          {/* Try Again Button */}
+          <Button
+            intent="primary"
+            size="medium"
+            block
+            className="bg-gradient-to-r from-[#3EAA78] to-[#56C490] hover:from-[#35926A] hover:to-[#45A277] text-white rounded-xl shadow-md font-medium flex items-center justify-center py-3.5"
             onClick={handleRetry}
           >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 01-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
             Try Again
           </Button>
         </div>

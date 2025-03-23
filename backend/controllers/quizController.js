@@ -3,35 +3,34 @@ const TestCode = require("../models/TestCode");
 const TestScore = require("../models/TestScore");
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_API_URL ="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000; // 2 seconds
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const generateQuiz = async (req, res) => {
   try {
-    console.log(" Received request:", req.body);  // Log the request data
+    console.log(" Received request:", req.body);
+    console.log(" Gemini API Key:", GEMINI_API_KEY ? "Present" : "Missing");
 
-    // Check if request contains testCode or subject/topic/difficulty
     const { testCode, subject, topic, difficulty } = req.body;
     
     let quizSubject, quizTopic, quizDifficulty, testCodeDocument;
     
     if (testCode) {
-      // Find test by code
       testCodeDocument = await TestCode.findOne({ testCode, isActive: true });
       if (!testCodeDocument) {
         return res.status(404).json({ error: "Invalid or inactive test code" });
       }
-      
-      // Use test parameters
       quizSubject = testCodeDocument.subject;
       quizTopic = testCodeDocument.topic;
       quizDifficulty = testCodeDocument.difficulty;
     } else {
-      // Use direct parameters
       if (!subject || !topic || !difficulty) {
         console.error(" Missing subject, topic or difficulty");
         return res.status(400).json({ error: "Missing subject, topic or difficulty" });
       }
-      
       quizSubject = subject;
       quizTopic = topic;
       quizDifficulty = difficulty;
@@ -47,53 +46,76 @@ Format the response as an array of JSON objects like this:
       "correctAnswer": "Option B"
     }`;
 
-    console.log("🔹 Sending request to Gemini API...");  // Log before API call
-    const response = await axios.post(
-      GEMINI_API_URL,
-      {
-        contents: [{ parts: [{ text: prompt }] }]  //  Correct request format
-      },
-      { headers: { "Content-Type": "application/json" }, params: { key: GEMINI_API_KEY } }
-    );
-    
+    let lastError = null;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        console.log(`🔹 Attempt ${attempt}: Sending request to Gemini API...`);
+        const response = await axios.post(
+          GEMINI_API_URL,
+          {
+            contents: [{ parts: [{ text: prompt }] }]
+          },
+          { 
+            headers: { "Content-Type": "application/json" },
+            params: { key: GEMINI_API_KEY }
+          }
+        );
 
-    console.log(" Gemini API Response:", response.data);  //Log API response
+        console.log(" Gemini API Response:", response.data);
 
-    if (!response.data || !response.data.candidates) {
-      throw new Error("Invalid response from Gemini API");
+        if (!response.data || !response.data.candidates) {
+          throw new Error("Invalid response from Gemini API");
+        }
+
+        const generatedText = response.data.candidates[0].content.parts[0].text;
+        const cleanJsonText = generatedText.replace(/```json|```/g, "").trim();
+        
+        let quizData;
+        try {
+          quizData = JSON.parse(cleanJsonText);
+        } catch (err) {
+          console.error("JSON Parsing Error:", err.message);
+          throw new Error("Invalid JSON response from Gemini");
+        }
+
+        if (!Array.isArray(quizData) || quizData.length === 0) {
+          throw new Error("Received empty quiz data");
+        }
+
+        if (testCode) {
+          return res.json({
+            testInfo: {
+              testCode: testCodeDocument.testCode,
+              subject: testCodeDocument.subject,
+              topic: testCodeDocument.topic,
+              difficulty: testCodeDocument.difficulty
+            },
+            questions: quizData
+          });
+        } else {
+          return res.json(quizData);
+        }
+      } catch (error) {
+        lastError = error;
+        if (error.response?.status === 429) {
+          console.log(`Rate limit hit, attempt ${attempt}/${MAX_RETRIES}. Waiting ${RETRY_DELAY}ms...`);
+          if (attempt < MAX_RETRIES) {
+            await sleep(RETRY_DELAY * attempt); // Exponential backoff
+            continue;
+          }
+        }
+        // For other errors or if we've exhausted retries, break the loop
+        break;
+      }
     }
-
-    const generatedText = response.data.candidates[0].content.parts[0].text;
-
-    //  Remove ```json and ```
-    const cleanJsonText = generatedText.replace(/```json|```/g, "").trim();
     
-    let quizData;
-    try {
-      quizData = JSON.parse(cleanJsonText);  // Parse cleaned JSON
-    } catch (err) {
-      console.error("JSON Parsing Error:", err.message);
-      return res.status(500).json({ error: "Invalid JSON response from Gemini" });
-    }
-    if (!Array.isArray(quizData) || quizData.length === 0) {
-      throw new Error("Received empty quiz data");
-    }
-    
-    // If using test code, include the test info in the response
-    if (testCode) {
-      res.json({
-        testInfo: {
-          testCode: testCodeDocument.testCode,
-          subject: testCodeDocument.subject,
-          topic: testCodeDocument.topic,
-          difficulty: testCodeDocument.difficulty
-        },
-        questions: quizData
-      });
+    // If we get here, all retries failed
+    console.error("Error generating quiz:", lastError.message);
+    if (lastError.response?.status === 429) {
+      return res.status(503).json({ error: "Service temporarily unavailable. Please try again in a few moments." });
     } else {
-      res.json(quizData);
+      return res.status(500).json({ error: lastError.message });
     }
-    
   } catch (error) {
     console.error("Error generating quiz:", error.message);
     res.status(500).json({ error: error.message });

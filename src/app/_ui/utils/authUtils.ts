@@ -4,6 +4,7 @@
 export interface User {
   username: string;
   email?: string;
+  isAdmin?: boolean;
 }
 
 /**
@@ -28,10 +29,12 @@ export const getCurrentUser = (): User | null => {
   if (!username) return null;
   
   const email = localStorage.getItem('email');
+  const isAdmin = localStorage.getItem('isAdmin') === 'true';
   
   return {
     username,
-    email: email || undefined
+    email: email || undefined,
+    isAdmin
   };
 };
 
@@ -57,4 +60,5 @@ export const logout = (): void => {
   localStorage.removeItem('token');
   localStorage.removeItem('username');
   localStorage.removeItem('email');
+  localStorage.removeItem('isAdmin');
 };

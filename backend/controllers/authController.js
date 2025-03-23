@@ -164,13 +164,20 @@ exports.verifyToken = (req, res, next) => {
 exports.getProfile = async (req, res) => {
   try {
     // Get user from database (exclude password)
-    const user = await User.findById(req.user.userId).select("-password");
+    const user = await User.findById(req.user.userId)
+      .select("-password")
+      .lean(); // Use lean() for better performance
     
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
     
-    // Return user data
+    // Sort quiz history by date (newest first)
+    if (user.quizHistory) {
+      user.quizHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+    
+    // Return user data with sorted quiz history
     res.json(user);
   } catch (error) {
     console.error("Get profile error:", error);
@@ -238,6 +245,24 @@ exports.saveQuizResult = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
     
+    // Check for duplicate quiz result
+    if (testCode) {
+      const existingResult = user.quizHistory.find(result => 
+        result.testCode === testCode && 
+        result.subject === subject && 
+        result.topic === topic
+      );
+      
+      if (existingResult) {
+        console.log("Quiz result already exists");
+        return res.json({
+          message: "Quiz result already saved",
+          quizResult: existingResult,
+          quizHistory: user.quizHistory
+        });
+      }
+    }
+    
     // Generate a new quiz ID
     const quizId = new mongoose.Types.ObjectId();
     console.log("Generated quiz ID:", quizId);
@@ -249,68 +274,62 @@ exports.saveQuizResult = async (req, res) => {
       topic: topic || '',
       score,
       totalQuestions,
-      date: new Date()
+      date: new Date(),
+      rank: 0,
+      totalParticipants: 0
     };
 
-    // If test code is provided, add it to the quiz result
+    // If test code is provided, save test score and calculate rank
     if (testCode) {
-      console.log("Processing test code:", testCode);
-      quizResult.testCode = testCode;
-      
-      // Find test code in database to verify it exists
-      const testCodeDoc = await TestCode.findOne({ testCode });
-      console.log("Found test code document:", testCodeDoc);
-      
-      if (testCodeDoc) {
-        try {
-          // Use provided timeTaken or default to 300 seconds (5 minutes)
-          const quizTimeTaken = timeTaken || 300;
-          
-          // Save to TestScore collection for admin leaderboard
-          const testScoreData = {
-            testCode,
-            userId: user._id,
-            score,
-            totalQuestions,
-            timeTaken: quizTimeTaken
-          };
-          console.log("Creating test score with data:", testScoreData);
+      try {
+        console.log("Processing test code:", testCode);
+        quizResult.testCode = testCode;
+        
+        // Use provided timeTaken or default to 300 seconds (5 minutes)
+        const quizTimeTaken = timeTaken || 300;
+        
+        // Save to TestScore collection
+        const testScoreData = {
+          testCode,
+          userId: user._id,
+          score,
+          totalQuestions,
+          timeTaken: quizTimeTaken
+        };
+        
+        // Try to find existing score
+        let testScore = await TestScore.findOne({
+          testCode,
+          userId: user._id
+        });
 
-          // Try to find existing score
-          let testScore = await TestScore.findOne({
-            testCode,
-            userId: user._id
-          });
-          console.log("Existing test score:", testScore);
-
-          if (testScore) {
-            // Update only if new score is better or same score with better time
-            if (score > testScore.score || 
-                (score === testScore.score && quizTimeTaken < testScore.timeTaken)) {
-              testScore.score = score;
-              testScore.totalQuestions = totalQuestions;
-              testScore.timeTaken = quizTimeTaken;
-              await testScore.save();
-              console.log("Updated existing test score:", testScore);
-            } else {
-              console.log("Not updating test score as current score/time is not better");
-            }
-          } else {
-            // Create new test score
-            testScore = new TestScore(testScoreData);
+        if (testScore) {
+          // Update only if new score is better or same score with better time
+          if (score > testScore.score || 
+              (score === testScore.score && quizTimeTaken < testScore.timeTaken)) {
+            testScore.score = score;
+            testScore.totalQuestions = totalQuestions;
+            testScore.timeTaken = quizTimeTaken;
             await testScore.save();
-            console.log("Created new test score:", testScore);
           }
-
-          // Add test score info to quiz result
-          quizResult.timeTaken = quizTimeTaken;
-          quizResult.testCode = testCode;
-        } catch (error) {
-          console.error("Error saving test score:", error);
-          // Don't throw error, still save to user history
+        } else {
+          // Create new test score
+          testScore = new TestScore(testScoreData);
+          await testScore.save();
         }
-      } else {
-        console.warn("Test code not found in database:", testCode);
+
+        // Calculate rank
+        const allScores = await TestScore.find({ testCode }).sort({ score: -1, timeTaken: 1 });
+        const rank = allScores.findIndex(s => s.userId.toString() === user._id.toString()) + 1;
+        
+        quizResult.rank = rank;
+        quizResult.totalParticipants = allScores.length;
+        quizResult.timeTaken = quizTimeTaken;
+        
+        console.log(`Calculated rank: ${rank} out of ${allScores.length} participants`);
+      } catch (error) {
+        console.error("Error processing test score:", error);
+        // Continue with saving quiz result even if test score fails
       }
     }
 
@@ -321,6 +340,7 @@ exports.saveQuizResult = async (req, res) => {
 
     res.json({
       message: "Quiz result saved successfully",
+      quizResult,
       quizHistory: user.quizHistory
     });
   } catch (error) {

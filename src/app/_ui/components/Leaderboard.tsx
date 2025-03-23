@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { quizAPI } from '../utils/apiUtils';
-import Button from './Button';
+import { Button } from '../components/Button';
 
 interface LeaderboardProps {
   testCode: string;

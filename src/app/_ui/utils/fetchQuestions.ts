@@ -25,19 +25,22 @@ export const fetchQuizQuestions = async (subject: string, difficulty: string, to
     );
 
     console.log("API Response:", response.data);
-
-    if (!response.data) {
-      throw new Error("API returned no data");
-    }
-
-    if (!Array.isArray(response.data)) {
-      console.warn("Expected an array, converting to array:", response.data);
-      return [response.data];
+    
+    if (!response.data || !Array.isArray(response.data)) {
+      throw new Error("Invalid response format from server");
     }
 
     return response.data;
-  } catch (error) {
-    console.error("Error fetching quiz questions:", error);
-    return [];
+  } catch (error: any) {
+    console.error("Error in fetchQuizQuestions:", error);
+    if (error.response?.status === 500) {
+      throw new Error("Server error: Quiz generation failed. Please try again.");
+    } else if (error.response?.data?.error) {
+      throw new Error(error.response.data.error);
+    } else if (error.message) {
+      throw new Error(error.message);
+    } else {
+      throw new Error("Failed to fetch quiz questions. Please try again.");
+    }
   }
 };
