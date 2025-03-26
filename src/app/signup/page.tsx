@@ -70,8 +70,8 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black">
-      <div className="w-full max-w-md p-8">
+    <div className="flex items-center justify-center min-h-screen bg-white">
+      <div className="w-full max-w-md p-8 bg-gray-100 shadow-md rounded-lg">
         <div className="flex justify-center mb-8">
         
             <g>
@@ -80,10 +80,10 @@ export default function SignupPage() {
          
         </div>
         
-        <h1 className="text-3xl font-bold mb-6 text-white text-center">Join today.</h1>
+        <h1 className="text-3xl font-bold mb-6 text-gray-800 text-center">Join today.</h1>
         
         {error && (
-          <div className="bg-red-900 border border-red-800 text-red-300 px-4 py-3 rounded mb-6">
+          <div className="bg-red-200 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
             {error}
           </div>
         )}
@@ -94,7 +94,7 @@ export default function SignupPage() {
               <input
                 id="email"
                 type="email"
-                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 rounded-md bg-white border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -106,7 +106,7 @@ export default function SignupPage() {
               <input
                 id="username"
                 type="text"
-                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 rounded-md bg-white border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Username (Optional)"
@@ -117,7 +117,7 @@ export default function SignupPage() {
               <input
                 id="password"
                 type="password"
-                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 rounded-md bg-white border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -130,7 +130,7 @@ export default function SignupPage() {
               <input
                 id="confirmPassword"
                 type="password"
-                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 rounded-md bg-white border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -144,7 +144,7 @@ export default function SignupPage() {
           <div>
             <button
               type="submit"
-              className="w-full p-3 rounded-md bg-white text-black font-bold hover:bg-gray-200 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black"
+              className="w-full p-3 rounded-md bg-blue-500 text-white font-bold hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white"
               disabled={loading}
             >
               {loading ? "Creating Account..." : "Create Account"}
@@ -160,7 +160,7 @@ export default function SignupPage() {
           </p>
         </div>
         
-        <div className="border-t border-gray-800 mt-8 pt-6 text-center">
+        <div className="border-t border-gray-300 mt-8 pt-6 text-center">
           <p className="text-gray-500">
             Are you an administrator?{" "}
             <Link href="/admin/signup" className="text-blue-500 hover:text-blue-400">

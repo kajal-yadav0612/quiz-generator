@@ -45,8 +45,8 @@ export default function AdminSignup() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black">
-      <div className="w-full max-w-md p-8">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
         <div className="flex justify-center mb-8">
         
             <g>
@@ -55,7 +55,7 @@ export default function AdminSignup() {
   
         </div>
         
-        <h1 className="text-3xl font-bold mb-6 text-white text-center">Admin Signup</h1>
+        <h1 className="text-3xl font-bold mb-6 text-gray-800 text-center">Admin Signup</h1>
         
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
@@ -65,7 +65,7 @@ export default function AdminSignup() {
                 name="name"
                 type="text"
                 required
-                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 rounded-md bg-white border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Full Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -79,7 +79,7 @@ export default function AdminSignup() {
                 type="email"
                 autoComplete="email"
                 required
-                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 rounded-md bg-white border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -93,7 +93,7 @@ export default function AdminSignup() {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 rounded-md bg-white border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -107,7 +107,7 @@ export default function AdminSignup() {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 rounded-md bg-white border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Confirm Password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -123,7 +123,7 @@ export default function AdminSignup() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full p-3 rounded-md bg-white text-black font-bold hover:bg-gray-200 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black"
+              className="w-full p-3 rounded-md bg-blue-600 text-white font-bold hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white"
             >
               {loading ? "Registering..." : "Sign up"}
             </button>
@@ -131,16 +131,16 @@ export default function AdminSignup() {
         </form>
         
         <div className="text-center mt-6">
-          <p className="text-gray-500">
+          <p className="text-gray-600">
             Already have an admin account?{" "}
-            <Link href="/admin/login" className="text-blue-500 hover:text-blue-400">
+            <Link href="/admin/login" className="text-blue-600 hover:text-blue-800">
               Sign in
             </Link>
           </p>
         </div>
         
-        <div className="border-t border-gray-800 mt-8 pt-6 text-center">
-          <Link href="/login" className="text-blue-500 hover:text-blue-400">
+        <div className="border-t border-gray-200 mt-8 pt-6 text-center">
+          <Link href="/login" className="text-blue-600 hover:text-blue-800">
             Login as Student
           </Link>
         </div>

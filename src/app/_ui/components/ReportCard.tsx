@@ -169,89 +169,93 @@ export const ReportCard = () => {
           </div>
           
           <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Subject
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Topic
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Score
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Percentage
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rank
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {quizHistory.map((quiz) => (
-                  <tr key={quiz.quizId} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(quiz.date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {quiz.subject || quiz.topic || '-'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {quiz.subject && quiz.topic ? 
-                          (isNaN(Number(quiz.topic)) ? quiz.topic : getTopicName(quiz.subject, quiz.topic)) 
-                          : '-'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{quiz.score} / {quiz.totalQuestions}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        (quiz.score / quiz.totalQuestions) >= 0.7 
-                          ? 'bg-green-100 text-green-800' 
-                          : (quiz.score / quiz.totalQuestions) >= 0.4 
-                            ? 'bg-yellow-100 text-yellow-800' 
-                            : 'bg-red-100 text-red-800'
-                      }`}>
-                        {Math.round((quiz.score / quiz.totalQuestions) * 100)}%
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {quiz.rank ? (
-                        <div className="flex items-center">
-                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
-                            quiz.rank === 1 
-                              ? 'bg-yellow-100 text-yellow-800' 
-                              : quiz.rank === 2 
-                                ? 'bg-gray-200 text-gray-800' 
-                                : quiz.rank === 3 
-                                  ? 'bg-amber-100 text-amber-800' 
-                                  : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {quiz.rank}
-                          </span>
-                          {quiz.totalParticipants && (
-                            <span className="ml-2 text-xs text-gray-500">
-                              of {quiz.totalParticipants}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Subject
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Topic
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Score
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Percentage
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                      Rank
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {quizHistory.map((quiz) => (
+                    <tr key={quiz.quizId} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatDate(quiz.date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {quiz.subject || quiz.topic || '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {quiz.subject && quiz.topic ? 
+                            (isNaN(Number(quiz.topic)) ? quiz.topic : getTopicName(quiz.subject, quiz.topic)) 
+                            : '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{quiz.score} / {quiz.totalQuestions}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          (quiz.score / quiz.totalQuestions) >= 0.7 
+                            ? 'bg-green-100 text-green-800' 
+                            : (quiz.score / quiz.totalQuestions) >= 0.4 
+                              ? 'bg-yellow-100 text-yellow-800' 
+                              : 'bg-red-100 text-red-800'
+                        }`}>
+                          {Math.round((quiz.score / quiz.totalQuestions) * 100)}%
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {!quiz.testCode ?(
+                          <span className ="test-gray-400">-</span>
+                        ) : quiz.rank ? (
+                          <div className="flex items-center">
+                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
+                              quiz.rank === 1 
+                                ? 'bg-yellow-100 text-yellow-800' 
+                                : quiz.rank === 2 
+                                  ? 'bg-gray-200 text-gray-800' 
+                                  : quiz.rank === 3 
+                                    ? 'bg-amber-100 text-amber-800' 
+                                    : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {quiz.rank}
+                            </span>
+                            {quiz.totalParticipants && (
+                              <span className="ml-1 text-xs text-gray-500 inline-block">
+                                of {quiz.totalParticipants}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </>
       )}

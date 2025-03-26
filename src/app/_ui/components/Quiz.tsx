@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { fetchQuizQuestions } from "../utils/fetchQuestions"; // Import Gemini fetch function
+import { fetchQuizQuestions } from "../utils/fetchQuestions"; // Import the utility function
 import { Button } from "@/app/_ui/components/Button";
 import { OptionList } from "./OptionList";
 import { formatTime } from "../utils/formatTime";
 import { useRouter } from "next/navigation";
 import { Result } from "./Result";
-import { authAPI } from "../utils/apiUtils"; // Import authAPI
+import { authAPI } from "../utils/apiUtils";
 import {
   playCorrectAnswer,
   playWrongAnswer,
@@ -32,7 +31,7 @@ export const Quiz = ({
 }: QuizProps) => {
   const router = useRouter();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
   const [timePassed, setTimePassed] = useState(0);
   const [activeQuestion, setActiveQuestion] = useState(0);
   const [selectedAnswerIndex, setSelectedAnswerIndex] = useState(-1);
@@ -49,69 +48,106 @@ export const Quiz = ({
   const [error, setError] = useState("");
   const [timeSpent, setTimeSpent] = useState(0);
   const [testCodeState, setTestCode] = useState(testCode);
+  const [quizInitialized, setQuizInitialized] = useState(false);
+  const questionsLoadedRef = useRef(false);
 
-  // Update the QuizQuestion interface to include id property
-  interface QuizQuestion {
-    id: string;
-    question: string;
-    options: string[];
-    correctAnswer: string;
-  }
-
-  // Load questions from localStorage
+  // Load questions from localStorage or fetch them
   useEffect(() => {
-    const storedQuestions = localStorage.getItem("quizQuestions");
-    if (storedQuestions && testCode) {
-      setQuizQuestions(JSON.parse(storedQuestions));
-      localStorage.removeItem("quizQuestions"); // Clear after loading
-      setLoading(false);
-    } else {
-      fetchQuestions();
-    }
-  }, [selectedSubject, selectedLevel, selectedTopic, testCode]);
-
-  const fetchQuestions = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-      const response = await axios.post(
-        "http://localhost:5000/api/quiz/generate",
-        {
-          subject: selectedSubject,
-          difficulty: selectedLevel,
-          topic: selectedTopic,
-          testCode: testCode || undefined, // Only send testCode if it exists
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    const loadQuizData = async () => {
+      if (questionsLoadedRef.current) return; // Prevent multiple loads
+      questionsLoadedRef.current = true;
       
-      // Handle different response formats based on whether a test code was used
-      if (testCode && response.data && response.data.questions) {
-        // When using test code, questions are in response.data.questions
-        setQuizQuestions(response.data.questions);
-      } else if (response.data) {
-        // When not using test code, questions are directly in response.data
-        setQuizQuestions(response.data);
-      } else {
-        setError("Failed to load questions. Please try again.");
+      try {
+        setLoading(true);
+        let questions;
+        
+        // Check if we have stored questions for a test code
+        const storedQuestions = localStorage.getItem("quizQuestions");
+        if (storedQuestions && testCode) {
+          try {
+            questions = JSON.parse(storedQuestions);
+            localStorage.removeItem("quizQuestions"); // Clear after loading
+          } catch (err) {
+            console.error("Error parsing stored questions:", err);
+            questions = null;
+          }
+        }
+        
+        // If no stored questions or parsing failed, fetch new ones
+        if (!questions) {
+          if (testCode) {
+            // Fetch questions for specific test code
+            const token = localStorage.getItem("token");
+            if (!token) {
+              router.push("/login");
+              return;
+            }
+            
+            const response = await axios.post(
+              "http://localhost:5000/api/quiz/generate",
+              {
+                subject: selectedSubject,
+                difficulty: selectedLevel,
+                topic: selectedTopic,
+                testCode: testCode,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+            
+            if (response.data && response.data.questions) {
+              questions = response.data.questions;
+            } else {
+              throw new Error("Invalid response format from server");
+            }
+          } else {
+            // Fetch new questions using the utility function
+            questions = await fetchQuizQuestions(
+              selectedSubject, 
+              selectedLevel, 
+              selectedTopic
+            );
+          }
+        }
+        
+        // Validate questions
+        if (!Array.isArray(questions) || questions.length === 0) {
+          throw new Error("No valid questions received");
+        }
+        
+        // Update state with questions
+        setQuizQuestions(questions);
+        setQuizInitialized(true);
+      } catch (error: any) {
+        console.error("Error loading quiz questions:", error);
+        setError(
+          error.response?.data?.error || error.message || "Failed to load questions. Please try again."
+        );
+      } finally {
+        setLoading(false);
       }
-    } catch (error: any) {
-      console.error("Error fetching questions:", error);
-      setError(
-        error.response?.data?.error || "Failed to load questions. Please try again."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    
+    loadQuizData();
+    
+    // Cleanup function
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [selectedSubject, selectedLevel, selectedTopic, testCode, router]);
+
+  // Setup timer only after questions are loaded and quiz is initialized
+  useEffect(() => {
+    if (!quizInitialized || quizFinished || quizQuestions.length === 0) return;
+    
+    setupTimer();
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [quizInitialized, quizFinished, quizQuestions.length]);
 
   const setupTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -124,25 +160,17 @@ export const Quiz = ({
   };
 
   useEffect(() => {
-    if (quizFinished) return;
-    setupTimer();
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [quizFinished]);
-
-  useEffect(() => {
-    if (quizFinished || timePassed <= TIME_LIMIT) return;
+    if (quizFinished || timePassed <= TIME_LIMIT || !quizInitialized || quizQuestions.length === 0) return;
+    
     if (selectedAnswerIndex === -1) {
       setResults((prev) => ({
         ...prev,
-        //secondsUsed: prev.secondsUsed + TIME_LIMIT,
         wrongAnswers: prev.wrongAnswers + 1,
       }));
     }
     handleNextQuestion();
     setTimePassed(0);
-  }, [timePassed]);
+  }, [timePassed, quizInitialized, quizQuestions.length]);
 
   const handleNextQuestion = () => {
     setSelectedAnswerIndex(-1);
@@ -186,7 +214,7 @@ export const Quiz = ({
   };
 
   const handleSelectAnswer = (answerIndex: number) => {
-    clearInterval(timerRef.current!);
+    if (timerRef.current) clearInterval(timerRef.current);
     setSelectedAnswerIndex(answerIndex);
     const correctAnswer = quizQuestions[activeQuestion]?.correctAnswer;
     const selectedAnswer = quizQuestions[activeQuestion]?.options[answerIndex];
@@ -292,25 +320,22 @@ export const Quiz = ({
     );
   }
 
-  if (quizQuestions.length === 0 || !quizQuestions[activeQuestion]) {
-    return <p>Loading questions...</p>;
+  // Don't render quiz content until questions are loaded and initialized
+  if (!quizInitialized || quizQuestions.length === 0 || !quizQuestions[activeQuestion]) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-light-blue mx-auto"></div>
+          <p className="mt-4 text-brand-light-blue">Preparing quiz questions...</p>
+        </div>
+      </div>
+    );
   }
 
   const { question, options } = quizQuestions[activeQuestion];
 
   return (
-    <motion.div
-      key={"countdown"}
-      variants={{
-        initial: { background: "#FF6A66", clipPath: "circle(0% at 50% 50%)" },
-        animate: { background: "#ffffff", clipPath: "circle(100% at 50% 50%)" },
-      }}
-      className="w-full h-full flex justify-center p-5"
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      transition={{ duration: 0.5 }}
-    >
+    <div className="w-full h-full flex justify-center p-5">
       <div className="flex flex-col text-black font-bold text-[32px] text-center w-full">
         <h1 className="font-bold text-base text-brand-light-blue">
           Daily Practice Paper Test
@@ -329,11 +354,9 @@ export const Quiz = ({
             {formatTime(timePassed)}
           </span>
           <div className="relative flex-1 h-3 bg-[#F0F0F0] mx-1 rounded-full">
-            <motion.div
+            <div
               className="absolute top-0 left-0 h-full bg-brand-light-blue rounded-full"
-              initial={{ width: "0%" }}
-              animate={{ width: `${(timePassed / TIME_LIMIT) * 100}%` }}
-              transition={{ duration: 1 }}
+              style={{ width: `${(timePassed / TIME_LIMIT) * 100}%` }}
             />
           </div>
           <span className="text-brand-mountain-mist text-xs font-normal">
@@ -360,6 +383,6 @@ export const Quiz = ({
           </Button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };

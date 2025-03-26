@@ -42,8 +42,8 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black">
-      <div className="w-full max-w-md p-8">
+    <div className="flex items-center justify-center min-h-screen bg-white">
+      <div className="w-full max-w-md p-8 bg-gray-100 shadow-md rounded-lg">
         <div className="flex justify-center mb-8">
           
             <g>
@@ -52,7 +52,7 @@ export default function AdminLogin() {
          
         </div>
         
-        <h1 className="text-3xl font-bold mb-6 text-white text-center">Admin Login</h1>
+        <h1 className="text-3xl font-bold mb-6 text-gray-800 text-center">Admin Login</h1>
         
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
@@ -63,7 +63,7 @@ export default function AdminLogin() {
                 type="email"
                 autoComplete="email"
                 required
-                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 rounded-md bg-white border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -77,7 +77,7 @@ export default function AdminLogin() {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="w-full p-3 rounded-md bg-black border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 rounded-md bg-white border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -86,14 +86,16 @@ export default function AdminLogin() {
           </div>
 
           {error && (
-            <div className="text-red-500 text-sm text-center mt-2">{error}</div>
+            <div className="bg-red-200 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+              {error}
+            </div>
           )}
 
           <div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full p-3 rounded-md bg-white text-black font-bold hover:bg-gray-200 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black"
+              className="w-full p-3 rounded-md bg-blue-500 text-white font-bold hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white"
             >
               {loading ? "Logging in..." : "Sign in"}
             </button>
