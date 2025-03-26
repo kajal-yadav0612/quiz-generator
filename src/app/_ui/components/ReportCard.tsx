@@ -144,7 +144,7 @@ export const ReportCard = () => {
       
       {quizHistory.length === 0 ? (
         <div className="bg-gray-50 rounded-lg p-6 text-center">
-          <p className="text-gray-600">You haven't taken any quizzes yet.</p>
+          <p className="text-gray-600">You have not taken any quizzes yet.</p>
           <p className="mt-2 text-blue-600">Start a quiz to see your results here!</p>
         </div>
       ) : (
